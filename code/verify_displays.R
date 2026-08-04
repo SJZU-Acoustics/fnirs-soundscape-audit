@@ -12,8 +12,9 @@
 #           boundary, e.g. regenerated -0.05147 quoted as -0.052)
 #   rel   — |actual/quoted - 1| <= reltol (order-of-magnitude p values)
 #   ineq  — the supplied logical must be TRUE
-#   flag  — known deviation on record (see the "Deviations" section at the
-#           bottom of this script and README.md); recorded, never fails
+#   flag  — known caveat on record (see the "Reconciliation record and
+#           remaining caveats" section at the bottom of this script and
+#           README.md); recorded, never fails
 #   doc   — constant documented by the raw-data QA reports; the raw SNIRF
 #           recordings are not deposited, so it cannot be recomputed here
 #
@@ -164,9 +165,9 @@ check("R2-03", "Confirmatory family, baseline window: min q = 0.118",
 pfc_c <- fw %>% filter(roi == "PFC_Frontal", term == "comfort_wi")
 check("R2-04", "PFC comfort difference slope p = 0.034",
       pfc_c$p[pfc_c$analysis == "difference"], 0.034, "round", digits = 3)
-check("R2-05", "PFC comfort difference slope -0.0515 (quoted -0.052 in Table S3)",
-      pfc_c$estimate[pfc_c$analysis == "difference"], -0.0515, "tol", tol = 6e-4,
-      note = "regenerated -0.05147; S3/manuscript rounding flagged as deviation X-02")
+check("R2-05", "PFC comfort difference slope -0.051 (quoted -0.051)",
+      pfc_c$estimate[pfc_c$analysis == "difference"], -0.051, "round", digits = 3,
+      note = "regenerated -0.05147; manuscript quoted -0.052 (4-dp lock) before the 2026-08-04 reconciliation")
 check("R2-06", "All six baseline slopes positive",
       all(fw$estimate[fw$analysis == "baseline"] > 0), TRUE, "ineq")
 check("R2-07", "Masked declared family: 0 of 18 tests survive",
@@ -304,9 +305,16 @@ check("R3-17", "391 flat channel-wavelength columns in the full montage",
 check("R3-18", "Exactly one rail-pinned wavelength, constant 1.000000",
       all(rail$intensity_850nm == 1), TRUE, "ineq",
       note = "P10 channel 12 at 850 nm; the exactly-one-cell count is QA-documented")
-check("R3-19", "Union mask excludes 289 subject x channel cells",
-      ms[["excluded_cells_dark_fraction_criterion"]] == 289, TRUE, "ineq",
-      note = "of 1,449 cells on the 5%-dark-floor or flat-off-floor criteria")
+check("R3-19", "Union mask excludes 273 of the 1,393 delivered active cells",
+      ms[["excluded_cells_union_mask_active"]] == 273 &&
+      ms[["delivered_active_cells"]] == 1393, TRUE, "ineq",
+      note = paste0(
+        "289 cells meet the criteria over the full montage sheet, 44 of them already ",
+        "pruned by the delivered screen; manuscript stated '289 of 1,449' before the ",
+        "2026-08-04 reconciliation"))
+check("R3-19b", "Delivered screen retained 245 of the 289 later-excluded cells",
+      ms[["of_which_retained_by_active_pair"]] == 245 &&
+      ms[["excluded_cells_dark_fraction_criterion"]] == 289, TRUE, "ineq")
 check("R3-20", "Right temporal has no usable channel in 11 participants",
       ms[["right_temporal_subjects_no_channel_usable"]] == 11, TRUE, "ineq")
 check("R3-21", "Left temporal has no usable channel in 2 participants",
@@ -355,9 +363,9 @@ gb   <- load_intermediate("gate_b_reproduction.csv")
 gc_pfc <- gc19 %>% filter(mc == "none", roi == "PFC_Frontal", axis == "comfort_wi")
 check("R4-01", "Gate C: rebuilt PFC difference slope -0.057",
       gc_pfc$refilter_estimate, -0.057, "round", digits = 3)
-check("R4-02", "Gate C: frozen PFC difference slope -0.052",
-      gc_pfc$frozen_estimate, -0.0515, "tol", tol = 6e-4,
-      note = "regenerated -0.05147, quoted -0.052 (deviation X-02)")
+check("R4-02", "Gate C: frozen PFC difference slope -0.051",
+      gc_pfc$frozen_estimate, -0.051, "round", digits = 3,
+      note = "regenerated -0.05147; quoted -0.052 before the 2026-08-04 reconciliation")
 check("R4-03", "Gate C: rebuilt p = 0.042", gc_pfc$refilter_p, 0.042, "round", digits = 3)
 check("R4-04", "Gate C: frozen p = 0.034", gc_pfc$frozen_p, 0.034, "round", digits = 3)
 bs66 <- bsh %>% filter(mc == "none", hpf == 0.01, roi == "PFC_Frontal")
@@ -411,9 +419,10 @@ check("R4-24", "Void-test bound: 34 live-channel CR2 q = 0.0925",
       cfs$q_recomputed[cfs$family_size == 34 & grepl("^CR2", cfs$family)],
       0.0925, "round", digits = 4)
 surv <- dfc %>% filter(mc == "none", hpf == 0, window == "difference", q_BH < 0.05)
-check("R4-25", "No-high-pass difference survivor: q = 0.035",
-      nrow(surv) == 1L && round(surv$q_BH, 3) == 0.035, TRUE, "ineq",
-      note = "SI text says right-temporal richness; regenerated cell is PFC richness (deviation X-06)")
+check("R4-25", "No-high-pass difference survivor: prefrontal richness, q = 0.035",
+      nrow(surv) == 1L && surv$roi == "PFC_Frontal" && surv$axis == "richness_wi" &&
+      round(surv$q_BH, 3) == 0.035, TRUE, "ineq",
+      note = "SI text labelled it right-temporal before the 2026-08-04 reconciliation (deviation X-06)")
 
 # -----------------------------------------------------------------------------
 cat("--- Results 3.5: the chain compounds ---------------------------------\n")
@@ -564,12 +573,12 @@ check("T2-04", "Table 2 A09: overall min q = 0.290",
 check("T2-05", "Table S1 A09: difference family min q = 0.364",
       min(f9d$q_BH), 0.364, "round", digits = 3)
 bpr_min <- min(bpr$q_BH)
-check("T2-06", "Table 2 A10: trait-reactivity family min q = 0.273",
-      bpr_min, 0.273, "flag",
+check("T2-06", "Table 2 A10: trait-reactivity family min q = 0.576",
+      bpr_min, 0.576, "round", digits = 3,
       note = sprintf(paste0(
-        "KNOWN DEVIATION X-01: regenerates as %.3f. The deposit anonymises age to ",
-        "5-year bands and the family-minimum test (sex) is co-modelled with z(age); ",
-        "the moderation family (0.277) reproduces exactly. Reported to the authors."), bpr_min))
+        "deposit regenerates %.3f; the exact-age analysis table gives 0.273, recorded ",
+        "in the Table 2/S1 footnotes. Reconciled manuscript-side 2026-08-04 ",
+        "(pre-reconciliation quoted value 0.273, former deviation X-01)."), bpr_min))
 check("T2-07", "Table 2 A10: trait-moderation family min q = 0.277",
       min(tmr$q_BH), 0.277, "round", digits = 3)
 check("T2-08", "Table 2 A11: cycle-bin family min q = 0.093",
@@ -657,9 +666,10 @@ check("TS2-11", "A21 void-test bound: -0.035, p = 0.003, q = 0.0925",
 # -----------------------------------------------------------------------------
 cat("--- Table S3: gate-C frozen vs re-filter -------------------------------\n")
 
-check("TS3-01", "S3 frozen side: difference -0.052 (p = 0.034)",
-      round(gc_pfc$frozen_p, 3) == 0.034 && abs(gc_pfc$frozen_estimate - -0.0515) < 6e-4,
-      TRUE, "ineq", note = "tex quotes -0.052; regenerated -0.05147 (deviation X-02)")
+check("TS3-01", "S3 frozen side: difference -0.051 (p = 0.034)",
+      round(gc_pfc$frozen_estimate, 3) == -0.051 && round(gc_pfc$frozen_p, 3) == 0.034,
+      TRUE, "ineq",
+      note = "regenerated -0.05147; tex quoted -0.052 (4-dp lock) before the 2026-08-04 reconciliation")
 check("TS3-02", "S3 rebuilt side: difference -0.057 (p = 0.042)",
       round(gc_pfc$refilter_estimate, 3) == -0.057 && round(gc_pfc$refilter_p, 3) == 0.042,
       TRUE, "ineq")
@@ -722,28 +732,33 @@ check("F6-01", "Fig 6: implied peak 0.073 below prefrontal lambda at every confi
             lam_p$C3_plus_dependence) > abs(peak)), TRUE, "ineq")
 
 # -----------------------------------------------------------------------------
-cat("--- Deviations on record (recorded, not failures) -----------------------\n")
+cat("--- Reconciliation record and remaining caveats -------------------------\n")
+# X-01/X-02/X-03/X-06 were deposit-vs-manuscript deviations at the initial
+# release; the manuscript was reconciled to the deposit on 2026-08-04, so these
+# are now ordinary passing checks with the pre-reconciliation values kept in
+# the notes for the audit trail.
 
-check("X-01", "A10 trait-reactivity family min q", bpr_min, 0.273, "flag",
-      note = "see T2-06; age anonymisation in the deposit moves 0.273 to 0.576")
-check("X-02", "Table S3 / text frozen difference slope", gc_pfc$frozen_estimate,
-      -0.052, "flag",
-      note = "regenerated -0.05147 rounds to -0.051 at 3 dp; manuscript quotes -0.052 (carried from the 4-dp lock)")
-check("X-03", "Table 1 / Methods mask counting", NA, NA, "flag",
-      note = paste0(
-        "289 = dark-fraction criterion over ALL sheet cells (incl. 44 inactive); ",
-        "union-excluded among delivered active cells = 273; delivered active cells = 1,393 ",
-        "(not 1,449 nominal); 'every dark channel retained' holds for 245/289. ",
-        "mask_summary.csv carries the honest counts."))
+check("X-01", "A10 trait-reactivity family min q: reconciled to 0.576",
+      round(bpr_min, 3) == 0.576, TRUE, "ineq",
+      note = "quoted 0.273 before reconciliation (the exact-age analysis-table value, now in the Table 2/S1 footnotes)")
+check("X-02", "Table S3 / text frozen difference slope: reconciled to -0.051",
+      round(gc_pfc$frozen_estimate, 3) == -0.051, TRUE, "ineq",
+      note = "quoted -0.052 before reconciliation (carried from the 4-dp lock -0.0515)")
+check("X-03", "Table 1 / Methods mask counting: reconciled to 273 of 1,393 active cells",
+      ms[["excluded_cells_union_mask_active"]] == 273 &&
+      ms[["delivered_active_cells"]] == 1393 &&
+      ms[["excluded_cells_dark_fraction_criterion"]] == 289 &&
+      ms[["of_which_flagged_inactive_by_active_pair"]] == 44 &&
+      ms[["of_which_retained_by_active_pair"]] == 245, TRUE, "ineq",
+      note = "quoted '289 of 1,449' and 'every dark channel retained' before reconciliation; the parenthetical 289-over-the-full-sheet (44 already pruned) and the 245/289 retained count are now stated in the manuscript")
 check("X-04", "A11 HbR bin slopes not portable", NA, NA, "flag",
       note = "HbO-only condition bins shipped; exploratory-only file, appears in no display")
 check("X-05", "Fig 2b binomial variant", p_binom, 2.9e-4, "flag",
       note = "passes as R3-14; flag records only the audit's per-subject averaging variant (2.7e-4) for provenance")
-check("X-06", "SI no-high-pass survivor label", NA, NA, "flag",
-      note = paste0(
-        "SI text: 'right-temporal richness, q = 0.035'; regenerated cell (and frozen ground ",
-        "truth) is PFC_Frontal richness, q = 0.0350, estimate -0.099 uM. The q value is ",
-        "correct; the ROI label in the SI text is not."))
+check("X-06", "SI no-high-pass survivor label: reconciled to prefrontal richness",
+      nrow(surv) == 1L && surv$roi == "PFC_Frontal" && surv$axis == "richness_wi",
+      TRUE, "ineq",
+      note = "SI text said right-temporal before reconciliation; the q = 0.035 value was correct throughout")
 
 # -----------------------------------------------------------------------------
 res <- bind_rows(.ledger$rows)
@@ -760,5 +775,5 @@ if (n_fail > 0) {
         select(id, display, actual, expected, mode, note)), right = FALSE)
   stop(n_fail, " display-number check(s) FAILED — see output/verification/display_number_check.csv")
 }
-cat("ALL DISPLAY-NUMBER CHECKS PASSED (known deviations recorded as flags).\n")
+cat("ALL DISPLAY-NUMBER CHECKS PASSED (remaining caveats recorded as flags).\n")
 cat("wrote", file.path(OUT, "display_number_check.csv"), "\n")

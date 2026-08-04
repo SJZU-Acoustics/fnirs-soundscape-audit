@@ -68,15 +68,20 @@ Rscript run_all.R 2>&1 | tee output/run_log.txt
 
 ## Verification
 
-`code/verify_displays.R` replays every number quoted in the main text, Tables 1–3, Supplementary Tables S1–S3 and the figure anchors against the regenerated outputs — 195 checks, all passing at the quoted precision — and writes `output/verification/display_number_check.csv`. Quantities whose source is the raw recording QA (not deposited) are recorded as documented constants rather than recomputed, and the deviations below are recorded as flags, never silently passed.
+`code/verify_displays.R` replays every number quoted in the main text, Tables 1–3, Supplementary Tables S1–S3 and the figure anchors against the regenerated outputs — 196 checks, all passing at the quoted precision — and writes `output/verification/display_number_check.csv`. Quantities whose source is the raw recording QA (not deposited) are recorded as documented constants rather than recomputed, and the caveats below are recorded as flags, never silently passed.
 
-## Known deviations between the deposit and the working pipeline
+## Reconciliation with the manuscript (2026-08-04)
 
-- **Age is anonymised to five-year bands** in the deposit (the working pipeline used exact integer ages). One quoted number moves as a result: the trait-reactivity family minimum in Table 2 regenerates as q = 0.576 against the quoted 0.273, because the family's minimum-setting test is co-modelled with z(age). The companion trait-moderation family (0.277) reproduces exactly, and no conclusion changes — both values are non-detections far above 0.05. Age-conditioned descriptive rows in the covariate scan shift for the same reason.
-- **Table S3 / main-text rounding**: the frozen prefrontal difference slope regenerates as −0.05147 µM, which rounds to −0.051; the manuscript quotes −0.052 (carried from a four-decimal lock).
-- **Mask counting** (Methods/Table 1): the quoted 289 excluded cells are counted over all sheet cells including 44 flagged inactive by the delivered `active_pair` screen; the union-excluded count among the 1,393 delivered active cells is 273. "Every dark channel had been retained [by the delivered screen]" holds for 245 of the 289. `output/mask_summary.csv` carries all of these counts.
+At the initial release, four deposit-vs-manuscript deviations were on record here. The current manuscript draft agrees with this release on all four; each keeps a footnote or parenthetical documenting the original value:
+
+- **Trait-reactivity family minimum (Table 2 / Table S1)**: age is anonymised to five-year bands in the deposit (the working pipeline used exact integer ages), and the family's minimum-setting test is co-modelled with z(age), so the deposit regenerates the family minimum as q = 0.576 while the exact-age analysis table gives 0.273. The manuscript now quotes 0.576 and footnotes the exact-age 0.273. The companion trait-moderation family (0.277) reproduces exactly, and both values are far-from-significance non-detections — no conclusion changes. Age-conditioned descriptive rows in the covariate scan shift for the same reason.
+- **Frozen difference-slope rounding (Table S3 / Section 3.4)**: the frozen prefrontal difference-score comfort slope regenerates as −0.05147 µM; the manuscript quoted −0.052 (carried from a four-decimal lock) and now quotes the deposit-regenerable −0.051.
+- **Mask counting (Methods / Table 1 / Section 3.2)**: the union mask excludes 273 of the 1,393 delivered active subject × channel cells; 289 cells meet the criteria over the full montage sheet, 44 of them already pruned by the delivered screen, and the delivered screen had retained 245 of the 289. The manuscript previously said "289 of 1,449" and "every dark channel had been retained"; it now states the 273/1,393 counting with the 289/44 parenthetical and the 245/289 retained count. `output/mask_summary.csv` carries all of these counts.
+- **SI survivor label**: the single no-high-pass difference-score survivor (q = 0.035) regenerates as *prefrontal* richness; the supplementary text said right-temporal and now says prefrontal. The q value was correct throughout.
+
+## Remaining caveats
+
 - **Fig 2b binomial**: the quoted P = 2.9e-4 reproduces as P(X ≥ 10) over 14 onsets at the quoted 24.5% rest share (2.86e-4); the audit's per-subject averaging variant (2.7e-4) is the value the DISPLAY_LOCK records — both are documented in the verification ledger.
-- **SI text label**: the single no-high-pass difference-score survivor (q = 0.035) regenerates as *prefrontal* richness; the supplementary text labels it right-temporal. The q value is correct in both.
 - The dark-channel SNR ≈ 6,700 and the dRange factor of 13 are documented values from the raw-data QA (raw recordings not deposited); the shipped excerpt trace reproduces the same order (mean/SD ≈ 5.9 × 10³).
 - The HbR cycle-bin companion file of the cycle-time-course module is not portable (HbO-only bins are shipped); it is exploratory and appears in no display item.
 
