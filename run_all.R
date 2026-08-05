@@ -58,7 +58,8 @@ analysis_modules <- c(
   "code/mod21_correction_sweep.R",    # void-test bound, gate-C decomposition
   "code/mod22_chain.R",               # the lambda chain (Fig 6)
   "code/mod23_responder_audit.R",     # responder heterogeneity (SI Fig S1)
-  "code/mod24_dark_fraction_mask.R"   # union-mask declared families
+  "code/mod24_dark_fraction_mask.R",  # union-mask declared families
+  "code/mod25_crossed_stimulus_re.R"  # crossed participant + clip RE (Table S4)
 )
 
 # ---- figure scripts ----------------------------------------------------------

@@ -33,9 +33,9 @@ The raw SNIRF recordings and the delivered continuous concentration series are *
 - `run_all.R` — master script: checks the ROI-rebuild gate, runs every analysis module, renders every manuscript figure, and finishes with a verification pass comparing the regenerated display values against the manuscript's quoted numbers.
 - `code/load_data.R` — single data entry: reads the workbook sheets (`col_types = "text"`, types re-inferred), converts haemoglobin from mol/L to µmol/L once, reconstructs the union channel mask from the `channel_mask` sheet, and provides the shared loaders and modelling helpers every module uses.
 - `code/style.R` — shared publication plot styling.
-- `code/mod*.R` — analysis modules, one per declared analysis family of the paper (appraisal structure, confirmatory ROI families, geometry variants, channel scan and adjudication, cluster-robust audit, chromophore triangulation, trait moderation, cycle time course, repetition structure, acoustic drivers, detrended coupling, global adjustment, multivariate pattern, HRF GLM, clip reliability, re-filter gates, corrected-ROI rechecks, correction sweep, the λ chain, the responder-heterogeneity audit, and the union-mask families).
+- `code/mod*.R` — analysis modules, one per declared analysis family of the paper (appraisal structure, confirmatory ROI families, geometry variants, channel scan and adjudication, cluster-robust audit, chromophore triangulation, trait moderation, cycle time course, repetition structure, acoustic drivers, detrended coupling, global adjustment, multivariate pattern, HRF GLM, clip reliability, re-filter gates, corrected-ROI rechecks, correction sweep, the λ chain, the responder-heterogeneity audit, and the union-mask families), plus `mod25_crossed_stimulus_re.R`, a post-review sensitivity refitting the declared family with crossed participant and clip random intercepts.
 - `code/fig*.R`, `code/sifig1_inference_audit.R` — the manuscript display items (Figures 1–6 and Supplementary Figure S1).
-- `code/make_tables.R`, `code/verify_displays.R` — regenerate the numbers behind Tables 1–3 and Supplementary Tables S1–S3, and check every quoted display value.
+- `code/make_tables.R`, `code/verify_displays.R` — regenerate the numbers behind Tables 1–3 and Supplementary Tables S1–S4, and check every quoted display value.
 - `code/python/` — `qa_detector_dropout.py`, `qa_dropout_onset_0803.py`, `refilter_pipeline.py`: the raw-recording QA and re-filter pipelines (documentation-grade; require the raw SNIRF recordings, which are not deposited — contact the authors).
 - `data/intermediates/` — small derived tables whose source is not deposited (see `data/README.md`).
 
@@ -68,7 +68,7 @@ Rscript run_all.R 2>&1 | tee output/run_log.txt
 
 ## Verification
 
-`code/verify_displays.R` replays every number quoted in the main text, Tables 1–3, Supplementary Tables S1–S3 and the figure anchors against the regenerated outputs — 196 checks, all passing at the quoted precision — and writes `output/verification/display_number_check.csv`. Quantities whose source is the raw recording QA (not deposited) are recorded as documented constants rather than recomputed, and the caveats below are recorded as flags, never silently passed.
+`code/verify_displays.R` replays every number quoted in the main text, Tables 1–3, Supplementary Tables S1–S4 and the figure anchors against the regenerated outputs — 202 ledger rows, of which 196 are checks passing at the quoted precision and 6 are recorded flags or documented constants — and writes `output/verification/display_number_check.csv`. Quantities whose source is the raw recording QA (not deposited) are recorded as documented constants rather than recomputed, and the caveats below are recorded as flags, never silently passed.
 
 ## Reconciliation with the manuscript (2026-08-04)
 

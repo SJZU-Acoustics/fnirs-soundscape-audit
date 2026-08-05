@@ -761,6 +761,37 @@ check("X-06", "SI no-high-pass survivor label: reconciled to prefrontal richness
       note = "SI text said right-temporal before reconciliation; the q = 0.035 value was correct throughout")
 
 # -----------------------------------------------------------------------------
+cat("--- Table S4: crossed stimulus random effect (post-review) -------------\n")
+
+s4 <- need(o("analysis_25_crossed_stimulus_re", "crossed_vs_subject_only.csv"),
+           "module 25 crossed random-effect comparison")
+check("TS4-01", "S4 / 3.3: 0 of 18 survive under either structure",
+      sum(s4$q_subject < 0.05) == 0L && sum(s4$q_crossed < 0.05) == 0L,
+      TRUE, "ineq",
+      note = "post-review sensitivity, not a declared family; no Table 2 row")
+s4_pfc <- s4 %>% filter(window == "difference", roi == "PFC_Frontal",
+                        axis == "comfort_wi")
+check("TS4-02", "S4 prefrontal comfort (difference) identical to 4 dp",
+      round(s4_pfc$estimate_subject, 4) == -0.0515 &&
+        round(s4_pfc$estimate_crossed, 4) == -0.0515 &&
+        round(s4_pfc$se_subject, 4) == 0.0241 &&
+        round(s4_pfc$se_crossed, 4) == 0.0241 &&
+        round(s4_pfc$q_crossed, 3) == 0.203, TRUE, "ineq")
+boundary <- s4 %>% filter(roi %in% c("PFC_Frontal", "Left_Temporal") |
+                            (roi == "Right_Temporal" & window == "response"))
+check("TS4-03", "S4: clip variance at the boundary in PFC/LT (all windows) and RT (response)",
+      all(round(boundary$clip_sd, 4) == 0), TRUE, "ineq",
+      note = "singular fit is the substantive result, not a failure")
+check("TS4-04", "3.3: standard errors inflate by at most 17%",
+      round(max(s4$se_inflation_pct), 1), 16.8, "tol", tol = 0.1)
+check("TS4-05", "S4: right-temporal clip SD 0.0157 (difference) / 0.0153 (baseline)",
+      round(max(s4$clip_sd[s4$window == "difference"]), 4) == 0.0157 &&
+        round(max(s4$clip_sd[s4$window == "baseline"]), 4) == 0.0153, TRUE, "ineq")
+check("TS4-06", "S4: no estimate moves more than 0.0066 uM",
+      round(max(abs(s4$estimate_crossed - s4$estimate_subject)), 4), 0.0066,
+      "tol", tol = 0.0001)
+
+# -----------------------------------------------------------------------------
 res <- bind_rows(.ledger$rows)
 readr::write_csv(res, file.path(OUT, "display_number_check.csv"))
 
