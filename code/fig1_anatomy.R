@@ -1,11 +1,11 @@
 # =============================================================================
 # Figure 1 — Measurement anatomy (178 mm, three panels)
-#   a  Mean HbO across the 90-s presentation cycle, run-openers vs followers.
+#   a  Mean HbO across the 90-s presentation cycle, first clip of each sequence vs later clips.
 #      The fig1a_* intermediates ARE the frozen product of the cycle recompute
 #      (which needs the raw delivered .mat series, not deposited); they are
 #      read via load_intermediate() and copied through to output/data_lock/
 #      byte-identical.
-#   b  Amplitude response of the delivered 0.01-0.10 Hz band-pass, recomputed
+#   b  Amplitude response of the original 0.01-0.10 Hz band-pass, recomputed
 #      by code/mod_fig1b_filter_gain.R (0.688 gate passed) into
 #      output/data_lock/fig1b_filter_gain.csv — run that module first.
 #   c  Re-filter result (valid arm, motion_correction = "none"): cycle-position
@@ -23,7 +23,7 @@ suppressPackageStartupMessages({
 })
 
 POS_COL <- c("opens a run" = okabe_ito[1], "follows a 90-s cycle" = okabe_ito[4])
-POS_LAB <- c("Run-openers", "Followers")
+POS_LAB <- c("First clip of sequence", "Later clips")
 BASE <- 8   # three panels in a row: secondary text 8 pt, axis titles 9 pt
 ATITLE <- 9
 TAG_THEME <- theme(plot.tag = element_text(size = 10, face = "bold",
@@ -98,7 +98,7 @@ p_b <- ggplot(gain, aes(freq_hz, gain)) +
 ref <- load_intermediate("fig1c_refilter.csv") %>%
   mutate(setting = factor(sprintf("%g", hpf),
                           levels = c("0.01", "0.005", "0.002", "0"),
-                          labels = c("0.01\n(delivered)", "0.005", "0.002",
+                          labels = c("0.01\n(original)", "0.005", "0.002",
                                      "none")))
 xlab_c <- "High-pass corner (Hz)"
 p_c1 <- ggplot(ref, aes(setting, diff_contrast, group = 1)) +

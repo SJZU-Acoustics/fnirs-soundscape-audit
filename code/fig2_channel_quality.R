@@ -3,7 +3,7 @@
 #   a  Raw intensity traces for the three failure kinds (shipped intermediates
 #      fig2a_*, extracted from the raw SNIRF recordings, which are not
 #      deposited): dark channel at 0.01312, live channel with cardiac
-#      pulsation (10-s inset), rail-pinned wavelength at 1.000000
+#      pulsation (10-s inset), wavelength saturated at its upper limit (1.000000)
 #   b  Per-session dropout calendar, detectors 6-10, with the two
 #      between-sequence rest intervals and the 14 release onsets
 #      (shipped intermediates fig2b_*)
@@ -100,7 +100,7 @@ s2 <- trace_plot(live, ybreaks = c(0.4, 0.7, 1.0), ylim = c(0.3, 1.0),
                 top = 0.985)
 
 s3 <- trace_plot(rail, ybreaks = c(0.6, 0.8, 1.0), ylim = c(0.5, 1.02),
-                 "rail", show_x = TRUE)
+                 "saturated", show_x = TRUE)
 
 p_a <- s1 / s2 / s3 + plot_layout(heights = c(1, 1, 1))
 
