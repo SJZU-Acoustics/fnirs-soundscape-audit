@@ -64,20 +64,13 @@ Rscript run_all.R 2>&1 | tee output/run_log.txt
 
 - Region-of-interest means must be aggregated through the per-session channel mask: the delivered quality flags pass dead channels. `load_data.R` reconstructs the union mask (absolute dark-floor criterion ≥ 5% of samples, a flatness-off-floor criterion catching one rail-saturated channel, and the exclusion of detector 8 for every participant) from the `channel_mask` sheet and verifies the reconstruction against the deposited `use_in_aggregation` flag on every run; `run_all.R` additionally gates that the masked aggregation reproduces the delivered ROI columns exactly when nothing is excluded.
 - Deposited values are stored at Excel's 15-significant-digit precision. Against the working pipeline, regenerated point estimates agree to ≲1e-7 relative; inferential columns (standard errors, degrees of freedom, p and q values) wiggle up to ~1e-7 relative through the mixed-model fits, and the one filter-numerics-sensitive file (`recovery_per_subject.csv`) to 6.3e-7. Differences at that scale are round-trip noise, not discrepancies; every quoted display value is reproduced at its quoted precision (see below).
+- Age is deposited in five-year bands, and the trait-reactivity family's minimum-setting test is co-modelled with z(age), so that family minimum regenerates as q = 0.576, the value the manuscript quotes (its footnote gives 0.273 from exact ages); the companion trait-moderation family (0.277) reproduces exactly.
+- `output/mask_summary.csv` carries the mask counts the manuscript quotes: 273 of the 1,393 active subject × channel cells excluded; 289 cells meeting the criteria over the full montage sheet, 44 of them already removed by the original screen, which had retained 245 of the 289.
 - `output/` is produced at run time and is safe to delete.
 
 ## Verification
 
 `code/verify_displays.R` replays every number quoted in the main text, Tables 1–3, Supplementary Tables S1–S4 and the figure anchors against the regenerated outputs — 202 ledger rows, of which 196 are checks passing at the quoted precision and 6 are recorded flags or documented constants — and writes `output/verification/display_number_check.csv`. Quantities whose source is the raw recording QA (not deposited) are recorded as documented constants rather than recomputed, and the caveats below are recorded as flags, never silently passed.
-
-## Reconciliation with the manuscript (2026-08-04)
-
-At the initial release, four deposit-vs-manuscript deviations were on record here. The current manuscript draft agrees with this release on all four; each keeps a footnote or parenthetical documenting the original value:
-
-- **Trait-reactivity family minimum (Table 2 / Table S1)**: age is anonymised to five-year bands in the deposit (the working pipeline used exact integer ages), and the family's minimum-setting test is co-modelled with z(age), so the deposit regenerates the family minimum as q = 0.576 while the exact-age analysis table gives 0.273. The manuscript now quotes 0.576 and footnotes the exact-age 0.273. The companion trait-moderation family (0.277) reproduces exactly, and both values are far-from-significance non-detections — no conclusion changes. Age-conditioned descriptive rows in the covariate scan shift for the same reason.
-- **Frozen difference-slope rounding (Table S3 / Section 3.4)**: the frozen prefrontal difference-score comfort slope regenerates as −0.05147 µM; the manuscript quoted −0.052 (carried from a four-decimal lock) and now quotes the deposit-regenerable −0.051.
-- **Mask counting (Methods / Table 1 / Section 3.2)**: the union mask excludes 273 of the 1,393 delivered active subject × channel cells; 289 cells meet the criteria over the full montage sheet, 44 of them already pruned by the delivered screen, and the delivered screen had retained 245 of the 289. The manuscript previously said "289 of 1,449" and "every dark channel had been retained"; it now states the 273/1,393 counting with the 289/44 parenthetical and the 245/289 retained count. `output/mask_summary.csv` carries all of these counts.
-- **SI survivor label**: the single no-high-pass difference-score survivor (q = 0.035) regenerates as *prefrontal* richness; the supplementary text said right-temporal and now says prefrontal. The q value was correct throughout.
 
 ## Remaining caveats
 
