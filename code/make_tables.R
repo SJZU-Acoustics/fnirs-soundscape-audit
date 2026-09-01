@@ -229,7 +229,7 @@ t2("Cluster-robust (CR2) channel audit (A08)", "42", "BH",
 # A09 HbR/HbT triangulation: minimum over the two window families.
 a9d <- rd(an("analysis_09_chromophore_triangulation", "family_difference_hbr_hbt.csv"))
 a9r <- rd(an("analysis_09_chromophore_triangulation", "family_response_hbr_hbt.csv"))
-t2("HbR and HbT slope triangulation, 2 windows (A09)", "12 x 2", "BH per window",
+t2("HbR and HbT slopes, 2 windows (A09)", "12 x 2", "BH per window",
    min(c(min_of(a9d, "q_BH"), min_of(a9r, "q_BH")), na.rm = TRUE), "0",
    "output/analysis_09_chromophore_triangulation/family_{difference,response}_hbr_hbt.csv",
    if (is.null(a9d) && is.null(a9r)) MISSING_NOTE else "")
@@ -713,16 +713,16 @@ for (hp in c("0.01", "0.005", "0.002", "0")) {
      if (is.null(rr) || !nrow(rr)) MISSING_NOTE else "")
 }
 
-# A21 — void-test bound, 34 live-channel tests.
+# A21 — dead-channel bound, 34 live-channel tests.
 v21 <- rd(an("analysis_21_correction_sweep", "channel_family_sensitivity.csv"))
 v21r <- if (is.null(v21)) NULL else v21 %>% filter(family_size == 34)
 SRC21 <- "output/analysis_21_correction_sweep/channel_family_sensitivity.csv"
 nt21 <- if (is.null(v21r) || !nrow(v21r)) MISSING_NOTE else ""
-s2("A21 void-test bound, 34 live-channel tests", "estimate (uM)",
+s2("A21 dead-channel bound, 34 live-channel tests", "estimate (uM)",
    if (is.null(v21r) || !nrow(v21r)) NA_real_ else v21r$estimate[1], SRC21, nt21)
-s2("A21 void-test bound, 34 live-channel tests", "p",
+s2("A21 dead-channel bound, 34 live-channel tests", "p",
    if (is.null(v21r) || !nrow(v21r)) NA_real_ else v21r$p[1], SRC21, nt21)
-s2("A21 void-test bound, 34 live-channel tests", "q",
+s2("A21 dead-channel bound, 34 live-channel tests", "q",
    if (is.null(v21r) || !nrow(v21r)) NA_real_ else v21r$q_recomputed[1], SRC21, nt21)
 
 tableS2 <- bind_rows(s2_rows)
