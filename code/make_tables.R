@@ -295,14 +295,14 @@ t2("Sequence-detrended baseline coupling (A14, masked)", "6", "BH",
    "output/analysis_21_correction_sweep/a14_family_masked.csv",
    if (is.null(a14m)) MISSING_NOTE else "")
 
-# A15 leave-one-out global adjustment: Table 2 quotes the response-window
-# family minima.
+# A15 leave-one-out global adjustment: Table 2 quotes the smallest q across
+# the three windows (per-window minima in Table S1).
 a15r <- rd(an("analysis_15_spatial_specificity", "roi_global_adjusted.csv"))
 t2("Global-adjusted ROI slopes, 3 windows (A15)", "6 x 3", "BH per window",
-   min_of(a15r %>% filter(window == "response"), "q_adjusted"), "0",
+   min_of(a15r, "q_adjusted"), "0",
    "output/analysis_15_spatial_specificity/roi_global_adjusted.csv",
    if (is.null(a15r)) MISSING_NOTE else
-     "Table 2 quotes the response-window minimum (as does Table S1)")
+     "minimum across the three windows (baseline, right temporal richness)")
 a15c <- rd(an("analysis_15_spatial_specificity", "channel_adjusted_cr2.csv"))
 t2("Global-adjusted channel scan (A15)", "42", "BH",
    min_of(a15c, "q_cr2"), "0",
@@ -337,13 +337,13 @@ t2("Adjective-level slopes (A18)", "24", "BH",
    "output/analysis_18_clip_reliability_and_adjectives/adjective_screen.csv",
    if (is.null(a18a)) MISSING_NOTE else "")
 
-# A24 masked ROI families: Table 2 quotes the difference-window (primary
-# outcome) minimum.
+# A24 masked ROI families: Table 2 quotes the smallest q across the three
+# windows (per-window minima in Table S1).
 t2("Masked ROI families, 3 windows (A24)", "6 x 3", "BH per window",
-   min_of(f24 %>% filter(analysis == "difference"), "q_BH"), "0",
+   min_of(f24, "q_BH"), "0",
    "output/analysis_24_dark_fraction_mask/families_dark_fraction_mask.csv",
    if (is.null(f24)) MISSING_NOTE else
-     "Table 2 quotes the difference-window (primary outcome) minimum")
+     "minimum across the three windows (baseline window)")
 
 # A23 responder heterogeneity.
 a23v <- rd(an("analysis_23_responder_heterogeneity", "A2_variance_falsification.csv"))
@@ -353,7 +353,7 @@ t2("Slope variance components, 3 windows (A23)", "6 x 3", "BH + permutation gate
    if (is.null(a23v)) MISSING_NOTE else
      "permutation-gated q (five nominal bootstrap cells overturned; footnote c)")
 a23s <- rd(an("analysis_23_responder_heterogeneity", "CD_selection_summary.csv"))
-t2("Out-of-sample responder selection (A23)", "6", "max-|t| permutation",
+t2("Out-of-sample responder selection (A23)", "12", "max-|t| permutation",
    min_of(a23s %>% filter(arm == "C_out_of_sample"), "q_bh"), "0",
    "output/analysis_23_responder_heterogeneity/CD_selection_summary.csv",
    if (is.null(a23s)) MISSING_NOTE else "")
@@ -534,8 +534,12 @@ s1("A14 detrended comfort slopes, 2 x 3", "6", "BH",
    source_output = "output/analysis_14_baseline_coupling_anatomy/family_detrended_comfort_slopes.csv",
    note = if (is.null(a14)) MISSING_NOTE else "")
 
-s1("A15 adjusted ROI slopes, response", "6", "BH",
-   min_q = min_of(a15r %>% filter(window == "response"), "q_adjusted"),
+a15w <- if (is.null(a15r)) rep(NA_real_, 3) else
+  c(min_of(a15r %>% filter(window == "difference"), "q_adjusted"),
+    min_of(a15r %>% filter(window == "response"), "q_adjusted"),
+    min_of(a15r %>% filter(window == "baseline"), "q_adjusted"))
+s1("A15 adjusted ROI slopes, 3 windows", "6 x 3", "BH / window",
+   min_q_difference = a15w[1], min_q_response = a15w[2], min_q_baseline = a15w[3],
    source_output = "output/analysis_15_spatial_specificity/roi_global_adjusted.csv",
    note = if (is.null(a15r)) MISSING_NOTE else "")
 s1("A15 adjusted channel scan, response", "42", "BH (CR2)",

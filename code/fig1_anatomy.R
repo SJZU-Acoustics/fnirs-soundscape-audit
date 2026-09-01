@@ -62,12 +62,15 @@ p_a <- ggplot(curve, aes(bin_mid, mean, colour = cycle_position,
   scale_fill_manual(values = POS_COL, breaks = names(POS_COL),
                     labels = POS_LAB) +
   scale_x_continuous(breaks = seq(0, 90, 30)) +
-  coord_cartesian(xlim = c(-10, 90), ylim = c(-0.13, 0.10)) +
+  coord_cartesian(xlim = c(-10, 90), ylim = c(-0.13, 0.12)) +
   labs(x = "Time from clip onset (s)", y = "HbO (µM)") +
   theme_pub(base_size = BASE, axis_title_size = ATITLE) +
   theme(legend.position = "inside",
-        legend.position.inside = c(0.03, 0.97),
-        legend.justification = c(0, 1))
+        legend.position.inside = c(0.02, 0.99),
+        legend.justification.inside = c(0, 1),
+        legend.key.spacing.y = unit(0, "mm"),
+        legend.key.height = unit(3.2, "mm"),
+        legend.margin = margin(0, 0, 0, 0))
 
 # ----------------------------------------------------------------- panel b
 gain <- readr::read_csv(file.path(LOCKDIR, "fig1b_filter_gain.csv"),
