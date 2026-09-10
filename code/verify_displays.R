@@ -321,11 +321,26 @@ check("R3-21", "Left temporal has no usable channel in 2 participants",
       ms[["left_temporal_subjects_no_channel_usable"]] == 2, TRUE, "ineq")
 check("R3-22", "Prefrontal retains all 13 channels in 61 participants",
       ms[["pfc_subjects_all_13_channels_usable"]] == 61, TRUE, "ineq")
-check("R3-23", "All four T-pair channels live in 27 participants",
+check("R3-23", "All four T-pair channels live in 27 participants under the superseded CV mask",
       mir$subjects_with_all_four_live[mir$mirror_pair == "T"] == 27, TRUE, "ineq",
-      note = "CV-mask-era counts, quoted per the display spec (DISPLAY_LOCK deviation 3)")
-check("R3-24", "All four TP-pair channels live in 1 participant",
-      mir$subjects_with_all_four_live[mir$mirror_pair == "TP"] == 1, TRUE, "ineq")
+      note = "CV-mask-era count (DISPLAY_LOCK deviation 3); no longer quoted in the manuscript")
+check("R3-24", "All four TP-pair channels live in 1 participant under the superseded CV mask",
+      mir$subjects_with_all_four_live[mir$mirror_pair == "TP"] == 1, TRUE, "ineq",
+      note = "CV-mask-era count; no longer quoted in the manuscript")
+cmv <- load_channel_mask() %>%
+  transmute(subject_id, channel_index,
+            live = active_pair == 1 & mask_excluded == 0,
+            usable = use_in_aggregation == 1)
+pair_n <- function(ch4, col) cmv %>% filter(channel_index %in% ch4) %>%
+  group_by(subject_id) %>%
+  summarise(ok = n() == 4L && all(.data[[col]]), .groups = "drop") %>%
+  pull(ok) %>% sum()
+check("R3-23b", "All four T-pair channels live in 14 participants (union mask; Fig 2c caption, Section 3.3)",
+      pair_n(c(16L, 17L, 20L, 21L), "live") == 14L, TRUE, "ineq")
+check("R3-23c", "T pair usable in no participant (its right member is detector 8)",
+      pair_n(c(16L, 17L, 20L, 21L), "usable") == 0L, TRUE, "ineq")
+check("R3-24b", "No participant has all four TP-pair channels live (union mask)",
+      pair_n(c(18L, 19L, 22L, 23L), "live") == 0L, TRUE, "ineq")
 check("R3-25", "Corrected RT response trend +0.0061",
       rsum$est_corrected[grepl("A12", rsum$claim)], 0.0061, "round", digits = 4)
 check("R3-26", "Corrected RT trend p = 0.16",
@@ -594,9 +609,11 @@ check("T2-11", "Table 2 A12: per-encounter min q = 0.466; first-vs-later 0.762",
       round(min(pef$q_BH), 3) == 0.466 && round(min(fvl$q_BH), 3) == 0.762, TRUE, "ineq")
 check("T2-12", "Table 2 A13: acoustic-driver family min q = 0.289",
       min(fas$q_BH), 0.289, "round", digits = 3)
-check("T2-13", "Table 2 A14: detrended masked family min q = 0.059",
-      min(a14m$q_BH), 0.059, "round", digits = 3,
-      note = "Table 2 quotes the masked variant; S1 quotes the unmasked 0.061")
+check("T2-13", "Table 2 A14: detrended family min q = 0.061 (declared, unmasked)",
+      min(fdt$q_BH), 0.061, "round", digits = 3,
+      note = "Table 2 and Table S1 both quote the declared family; the masked re-run (0.059, A21) is quoted in the SI text only")
+check("T2-13b", "SI text A14: masked re-run min q = 0.059",
+      min(a14m$q_BH), 0.059, "round", digits = 3)
 check("T2-14", "Table S1 A14: detrended unmasked family min q = 0.061",
       min(fdt$q_BH), 0.061, "round", digits = 3)
 check("T2-15", "Table 2 A15: adjusted response family min q = 0.321",

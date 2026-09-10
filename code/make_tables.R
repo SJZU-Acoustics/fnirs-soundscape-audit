@@ -145,30 +145,27 @@ t1("montage", "shortest active pair (mm)",
    "workbook channels sheet (load_channels())",
    if (is.null(ch)) "workbook unavailable" else "")
 
-# Row 7 — mirror-pair survival (A20's CV-mask-era counts, per DISPLAY_LOCK
-# deviation 3).
-mp <- rd(an("analysis_20_detector_dropout", "mirror_pair_completeness.csv"))
-if (is.null(mp)) mp <- rd(dl("fig2c_mirror_pairs.csv"))
-if (!is.null(mp)) {
-  if ("subjects_with_all_four_live" %in% names(mp)) {
-    t1("mirror-symmetric montage", "subjects with all four T-pair channels live",
-       mp$subjects_with_all_four_live[mp$mirror_pair == "T"][1],
-       "output/analysis_20_detector_dropout/mirror_pair_completeness.csv")
-    t1("mirror-symmetric montage", "subjects with all four TP-pair channels live",
-       mp$subjects_with_all_four_live[mp$mirror_pair == "TP"][1],
-       "output/analysis_20_detector_dropout/mirror_pair_completeness.csv")
-  } else {
-    comp <- tapply(mp$subjects_pair_complete, mp$pair, max)
-    t1("mirror-symmetric montage", "subjects with all four T-pair channels live",
-       comp[["T"]], "output/data_lock/fig2c_mirror_pairs.csv")
-    t1("mirror-symmetric montage", "subjects with all four TP-pair channels live",
-       comp[["TP"]], "output/data_lock/fig2c_mirror_pairs.csv")
-  }
+# Row 7 — mirror-pair survival under the union mask (DISPLAY_LOCK deviation 7):
+# live = active and not excluded by the dark-fraction / flat criteria; usable =
+# live and not on detector 8. Recomputed from the channel_mask sheet.
+cm7 <- tryCatch(load_channel_mask(), error = function(e) NULL)
+if (!is.null(cm7)) {
+  cm7 <- cm7 %>% transmute(subject_id, channel_index,
+                           live = active_pair == 1 & mask_excluded == 0,
+                           usable = use_in_aggregation == 1)
+  pair_n <- function(ch4, col) cm7 %>% filter(channel_index %in% ch4) %>%
+    group_by(subject_id) %>%
+    summarise(ok = n() == 4L && all(.data[[col]]), .groups = "drop") %>%
+    pull(ok) %>% sum()
+  t1("mirror-symmetric montage", "subjects with all four T-pair channels live (union mask)",
+     pair_n(c(16L, 17L, 20L, 21L), "live"), "workbook channel_mask sheet (load_channel_mask())")
+  t1("mirror-symmetric montage", "subjects with all four T-pair channels usable (union mask)",
+     pair_n(c(16L, 17L, 20L, 21L), "usable"), "workbook channel_mask sheet (load_channel_mask())")
+  t1("mirror-symmetric montage", "subjects with all four TP-pair channels live (union mask)",
+     pair_n(c(18L, 19L, 22L, 23L), "live"), "workbook channel_mask sheet (load_channel_mask())")
 } else {
-  t1("mirror-symmetric montage", "subjects with all four T-pair channels live",
-     NA, "output/analysis_20_detector_dropout/mirror_pair_completeness.csv", MISSING_NOTE)
-  t1("mirror-symmetric montage", "subjects with all four TP-pair channels live",
-     NA, "output/analysis_20_detector_dropout/mirror_pair_completeness.csv", MISSING_NOTE)
+  t1("mirror-symmetric montage", "subjects with all four T-pair channels live (union mask)",
+     NA, "workbook channel_mask sheet (load_channel_mask())", "workbook unavailable")
 }
 
 # Row 8 — HbT arithmetic identity.
@@ -288,12 +285,13 @@ t2("Stimulus acoustic features (A13)", "8", "BH",
    "output/analysis_13_stimulus_acoustic_drivers/family_acoustic_slopes_20_30.csv",
    if (is.null(a13)) MISSING_NOTE else "")
 
-# A14 (Table 2): the masked variant from the A21 correction sweep.
-a14m <- rd(an("analysis_21_correction_sweep", "a14_family_masked.csv"))
-t2("Sequence-detrended baseline coupling (A14, masked)", "6", "BH",
-   min_of(a14m, "q_BH"), "0",
-   "output/analysis_21_correction_sweep/a14_family_masked.csv",
-   if (is.null(a14m)) MISSING_NOTE else "")
+# A14 (Table 2): the declared family as run (unmasked). The masked re-run from
+# the A21 correction sweep (min q 0.059) is quoted in the SI text only.
+a14 <- rd(an("analysis_14_baseline_coupling_anatomy", "family_detrended_comfort_slopes.csv"))
+t2("Sequence-detrended baseline coupling (A14)", "6", "BH",
+   min_of(a14, "q_BH"), "0",
+   "output/analysis_14_baseline_coupling_anatomy/family_detrended_comfort_slopes.csv",
+   if (is.null(a14)) MISSING_NOTE else "")
 
 # A15 leave-one-out global adjustment: Table 2 quotes the smallest q across
 # the three windows (per-window minima in Table S1).
@@ -526,8 +524,7 @@ s1("A13 feature slopes, 4 features x 2 targets", "8", "BH",
    source_output = "output/analysis_13_stimulus_acoustic_drivers/family_acoustic_slopes_20_30.csv",
    note = if (is.null(a13)) MISSING_NOTE else "")
 
-# S1 A14: the unmasked detrended family from analysis_14 (Table 2 uses the
-# masked variant from analysis_21).
+# S1 A14: the declared family, as in Table 2.
 a14 <- rd(an("analysis_14_baseline_coupling_anatomy", "family_detrended_comfort_slopes.csv"))
 s1("A14 detrended comfort slopes, 2 x 3", "6", "BH",
    min_q = min_of(a14, "q_BH"),

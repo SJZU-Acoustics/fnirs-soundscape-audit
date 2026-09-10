@@ -8,10 +8,11 @@
 #      between-sequence rest intervals and the 14 release onsets
 #      (shipped intermediates fig2b_*)
 #   c  Mirror-pair montage schematic (hand-built) — the completeness counts in
-#      output/data_lock/fig2c_mirror_pairs.csv are RECOMPUTED here from
-#      load_channels() + load_dead_channels(): the superseded session-CV mask,
-#      against which the counts were declared (27 participants with all four
-#      T-pair channels live, 1 with all four TP-pair channels)
+#      output/data_lock/fig2c_mirror_pairs.csv are RECOMPUTED here under the
+#      union mask (load_channel_mask(): 14 participants with all four T-pair
+#      channels live, 0 usable because the right member is detector 8; 0 with
+#      all four TP-pair channels live) and, for the record, under the
+#      superseded session-CV mask (load_dead_channels(): 27 / 1)
 #   d  Effective N per ROI under the union mask, RECOMPUTED here from
 #      load_channel_mask() into output/data_lock/fig2d_effective_n.csv
 # Panels (a)/(b) read the intermediates through; (c)/(d) plot the recomputation.
@@ -150,14 +151,18 @@ p_b <- ggplot(raster %>% filter(frac_dark >= 0.5)) +
         axis.text.y = element_text(size = 6.5))
 
 # ----------------------------------------------------------------- panel c
-# RECOMPUTED: mirror-pair completeness under the superseded session-CV mask
-# (load_dead_channels()). A channel is live for a subject when its pair is
-# active in the channels sheet and the cell is not in the CV dead set;
-# subjects_pair_complete counts participants with all four channels of the
-# pair's mirror group live.
+# RECOMPUTED: mirror-pair completeness. Under the union mask
+# (load_channel_mask()) a channel is LIVE for a subject when its pair is active
+# and the cell is not excluded by the dark-fraction / flat criteria, and USABLE
+# when it is live and not on detector 8 (use_in_aggregation). The superseded
+# session-CV mask (load_dead_channels()) is kept for the record: the counts
+# were first declared against it (27 / 1).
 chs <- load_channels()
-dead <- load_dead_channels()
-dead_set <- dead %>% distinct(subject_id, channel_index)
+cm <- load_channel_mask() %>%
+  transmute(subject_id, channel_index,
+            live = active_pair == 1 & mask_excluded == 0,
+            usable = use_in_aggregation == 1)
+dead_set <- load_dead_channels() %>% distinct(subject_id, channel_index)
 subjects <- unique(chs$subject_id)
 
 mirror <- tribble(
@@ -173,7 +178,7 @@ mirror <- mirror %>%
   left_join(ch_info, by = c("right_ch" = "channel_index")) %>%
   rename(right_name = channel_name, right_detector = detector)
 
-cell_live <- function(s, ch) {
+cell_live_cv <- function(s, ch) {
   act <- chs %>% filter(subject_id == s, channel_index == ch) %>%
     pull(active_pair)
   length(act) == 1 && act == 1 &&
@@ -182,12 +187,22 @@ cell_live <- function(s, ch) {
 cell_dead <- function(s, ch) {
   any(dead_set$subject_id == s & dead_set$channel_index == ch)
 }
+count_union <- function(ch4, col) {
+  cm %>% filter(channel_index %in% ch4) %>%
+    group_by(subject_id) %>%
+    summarise(ok = n() == 4L && all(.data[[col]]), .groups = "drop") %>%
+    pull(ok) %>% sum()
+}
 complete_pair <- map_dfr(c("T", "TP"), function(pp) {
   ch4 <- mirror %>% filter(pair == pp)
-  n_ok <- sum(map_lgl(subjects, function(s) {
-    all(map_lgl(c(ch4$left_ch, ch4$right_ch), function(ch) cell_live(s, ch)))
+  all4 <- c(ch4$left_ch, ch4$right_ch)
+  n_cv <- sum(map_lgl(subjects, function(s) {
+    all(map_lgl(all4, function(ch) cell_live_cv(s, ch)))
   }))
-  tibble(pair = pp, subjects_pair_complete = n_ok)
+  tibble(pair = pp,
+         subjects_pair_complete_cv_mask = as.integer(n_cv),
+         subjects_pair_live_union_mask = as.integer(count_union(all4, "live")),
+         subjects_pair_usable_union_mask = as.integer(count_union(all4, "usable")))
 })
 mirror <- mirror %>% left_join(complete_pair, by = "pair") %>%
   rowwise() %>%
@@ -199,11 +214,18 @@ mirror <- mirror %>% left_join(complete_pair, by = "pair") %>%
   }) %>%
   ungroup() %>%
   select(pair, left_ch, left_name, left_detector, right_ch, right_name,
-         right_detector, failed_side, subjects_pair_complete)
+         right_detector, failed_side, subjects_pair_complete_cv_mask,
+         subjects_pair_live_union_mask, subjects_pair_usable_union_mask)
 
-# Gate: the declared CV-mask-era counts.
-stopifnot("Fig2c gate failed: mirror-pair completeness is not T=27 / TP=1" =
-            identical(mirror$subjects_pair_complete, c(27L, 27L, 1L, 1L)))
+# Gates: the CV-mask-era counts the figure was declared against, and the
+# union-mask counts the caption and Section 3.3 quote.
+stopifnot(
+  "Fig2c gate failed: CV-mask completeness is not T=27 / TP=1" =
+    identical(mirror$subjects_pair_complete_cv_mask, c(27L, 27L, 1L, 1L)),
+  "Fig2c gate failed: union-mask live counts are not T=14 / TP=0" =
+    identical(mirror$subjects_pair_live_union_mask, c(14L, 14L, 0L, 0L)),
+  "Fig2c gate failed: union-mask usable counts are not 0 / 0" =
+    identical(mirror$subjects_pair_usable_union_mask, c(0L, 0L, 0L, 0L)))
 readr::write_csv(mirror, file.path(LOCKDIR, "fig2c_mirror_pairs.csv"), eol = "\r\n")
 cat("  wrote", file.path(LOCKDIR, "fig2c_mirror_pairs.csv"), "\n")
 

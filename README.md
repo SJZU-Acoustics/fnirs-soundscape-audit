@@ -70,7 +70,7 @@ Rscript run_all.R 2>&1 | tee output/run_log.txt
 
 ## Verification
 
-`code/verify_displays.R` replays every number quoted in the main text, Tables 1–3, Supplementary Tables S1–S4 and the figure anchors against the regenerated outputs — 202 ledger rows, of which 196 are checks passing at the quoted precision and 6 are recorded flags or documented constants — and writes `output/verification/display_number_check.csv`. Quantities whose source is the raw recording QA (not deposited) are recorded as documented constants rather than recomputed, and the caveats below are recorded as flags, never silently passed.
+`code/verify_displays.R` replays every number quoted in the main text, Tables 1–3, Supplementary Tables S1–S4 and the figure anchors against the regenerated outputs — 206 ledger rows, of which 200 are checks passing at the quoted precision and 6 are recorded flags or documented constants — and writes `output/verification/display_number_check.csv`. Quantities whose source is the raw recording QA (not deposited) are recorded as documented constants rather than recomputed, and the caveats below are recorded as flags, never silently passed.
 
 ## Remaining caveats
 
